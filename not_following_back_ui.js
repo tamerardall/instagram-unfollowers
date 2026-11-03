@@ -1,6 +1,6 @@
-// Instagram: seni geri takip etmeyenleri gösteren yan panel.
-// Kullanım: instagram.com'da giriş yapılmışken F12 > Console'a yapıştır, Enter.
-// Salt okunur: yalnızca liste isteklerini yapar, hiçbir hesabı takipten çıkarmaz.
+// Instagram: side panel that shows who doesn't follow you back.
+// Usage: while logged in at instagram.com, paste into F12 > Console and press Enter.
+// Read-only: only requests the lists, never unfollows anyone.
 (() => {
   const HOST_ID = "nfb-host";
   document.getElementById(HOST_ID)?.remove();
@@ -9,9 +9,9 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const jitter = () => 1500 + Math.random() * 2000;
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const nf = new Intl.NumberFormat("tr-TR");
+  const nf = new Intl.NumberFormat("en-US");
 
-  // ---------- DOM yardımcısı (innerHTML kullanmaz, Trusted Types'a takılmaz) ----------
+  // ---------- DOM helper (avoids innerHTML so Trusted Types doesn't block it) ----------
   const h = (tag, props = {}, ...kids) => {
     const el = document.createElement(tag);
     for (const [k, v] of Object.entries(props)) {
@@ -24,7 +24,7 @@
     return el;
   };
 
-  // ---------- Stil ----------
+  // ---------- Styles ----------
   const css = `
   :host { all: initial; }
   * { box-sizing: border-box; }
@@ -91,7 +91,7 @@
   .err { color: var(--danger); font-weight:600; }
   `;
 
-  // ---------- Durum ----------
+  // ---------- State ----------
   const userId = (document.cookie.match(/ds_user_id=(\d+)/) || [])[1];
   let cancelled = false;
   const S = {
@@ -106,10 +106,10 @@
     shown: PAGE_SIZE,
   };
 
-  // ---------- Kabuk ----------
+  // ---------- Shell ----------
   const host = h("div", { id: HOST_ID });
   const root = host.attachShadow({ mode: "open" });
-  const panel = h("section", { class: "panel", role: "dialog", "aria-label": "Geri takip etmeyenler" });
+  const panel = h("section", { class: "panel", role: "dialog", "aria-label": "Accounts that don't follow you back" });
   root.append(h("style", {}, css), panel);
   document.documentElement.append(host);
 
@@ -122,20 +122,20 @@
   function shell(body) {
     panel.replaceChildren(
       h("header", { class: "head" },
-        h("h1", {}, "Geri takip etmeyenler"),
+        h("h1", {}, "Not following back"),
         h("button", { class: "icon-btn", "aria-label": "Kapat", onclick: close }, "×")),
       h("div", { class: "body" }, body)
     );
   }
 
-  // ---------- Görünümler ----------
+  // ---------- Views ----------
   function renderIdle() {
     shell(h("div", { class: "pad" },
-      h("p", { class: "lead" }, "Takip ettiklerinle takipçilerini karşılaştır."),
-      h("p", { class: "muted" }, "Panel yalnızca listeleri okur. Hiçbir hesabı takipten çıkarmaz, hiçbir yere veri göndermez."),
-      h("p", { class: "muted" }, "Hesap büyüklüğüne göre birkaç dakika sürer. İşlem bitene kadar bu sekmeyi açık tut."),
-      userId ? h("button", { class: "primary", onclick: run }, "Karşılaştırmayı başlat")
-             : h("p", { class: "err" }, "Oturum bulunamadı. instagram.com'da giriş yapıp scripti yeniden çalıştır.")
+      h("p", { class: "lead" }, "Compare who you follow with who follows you."),
+      h("p", { class: "muted" }, "This panel only reads your lists. It never unfollows anyone and sends no data anywhere."),
+      h("p", { class: "muted" }, "Large accounts can take a few minutes. Keep this tab open until it finishes."),
+      userId ? h("button", { class: "primary", onclick: run }, "Start comparison")
+             : h("p", { class: "err" }, "No session found. Log in at instagram.com and run the script again.")
     ));
   }
 
@@ -143,14 +143,14 @@
     refs.f1 = h("b", {}, "0");
     refs.f2 = h("b", {}, "0");
     refs.bar = h("div", { class: "bar indet" }, h("i"));
-    refs.phase = h("p", { class: "muted" }, "Takip ettiklerin okunuyor...");
+    refs.phase = h("p", { class: "muted" }, "Reading who you follow...");
     shell(h("div", { class: "pad" },
-      h("p", { class: "lead" }, "Listeler okunuyor"),
+      h("p", { class: "lead" }, "Reading your lists"),
       h("div", { class: "tally" },
-        h("div", {}, refs.f1, h("span", {}, "takip ettiğin")),
-        h("div", {}, refs.f2, h("span", {}, "takipçin"))),
+        h("div", {}, refs.f1, h("span", {}, "following")),
+        h("div", {}, refs.f2, h("span", {}, "followers"))),
       refs.bar, h("div", { style: "height:12px" }), refs.phase,
-      h("button", { class: "ghost", onclick: () => { cancelled = true; } }, "Vazgeç")
+      h("button", { class: "ghost", onclick: () => { cancelled = true; } }, "Cancel")
     ));
     updateRunning();
   }
@@ -166,15 +166,15 @@
       refs.bar.firstChild.style.width = pct + "%";
     }
     refs.phase.textContent = S.counts.followers === 0 && !S.phaseFollowers
-      ? "Takip ettiklerin okunuyor..." : "Takipçilerin okunuyor...";
+      ? "Reading who you follow..." : "Reading your followers...";
   }
 
   function renderError() {
     shell(h("div", { class: "pad" },
-      h("p", { class: "lead" }, "Karşılaştırma tamamlanamadı"),
+      h("p", { class: "lead" }, "The comparison didn't finish"),
       h("p", { class: "err" }, S.err),
-      h("p", { class: "muted" }, "Eksik veriyle sonuç göstermiyorum, çünkü yanlış kişileri işaretlerdi."),
-      h("button", { class: "primary", onclick: run }, "Tekrar dene")
+      h("p", { class: "muted" }, "No result is shown from incomplete data, because it would flag the wrong people."),
+      h("button", { class: "primary", onclick: run }, "Try again")
     ));
   }
 
@@ -192,21 +192,21 @@
     const tabBtn = (key, label, n) =>
       h("button", { class: "tab", role: "tab", "aria-selected": String(S.tab === key), onclick: () => { S.tab = key; S.shown = PAGE_SIZE; renderDone(true); } },
         label, h("small", {}, nf.format(n)));
-    const search = h("input", { type: "search", placeholder: "Kullanıcı ara", "aria-label": "Kullanıcı ara", value: S.q,
+    const search = h("input", { type: "search", placeholder: "Search users", "aria-label": "Search users", value: S.q,
       oninput: (e) => { S.q = e.target.value; S.shown = PAGE_SIZE; renderList(); } });
     const hv = h("input", { type: "checkbox", id: "hv", onchange: (e) => { S.hideVerified = e.target.checked; S.shown = PAGE_SIZE; renderList(); } });
     hv.checked = S.hideVerified;
-    refs.copyBtn = h("button", { class: "ghost", onclick: copyList }, "Listeyi kopyala");
+    refs.copyBtn = h("button", { class: "ghost", onclick: copyList }, "Copy list");
 
     shell([
       h("div", { class: "result-top" },
         refs.big,
-        h("p", { class: "big-cap" }, `kişi seni geri takip etmiyor. Takip ettiğin ${nf.format(d.followingSize)} hesabın ${nf.format(d.notBack.length)} tanesi.`)),
+        h("p", { class: "big-cap" }, `people don't follow you back. That's ${nf.format(d.notBack.length)} of the ${nf.format(d.followingSize)} accounts you follow.`)),
       h("div", { class: "tabs", role: "tablist" },
-        tabBtn("notBack", "Seni takip etmeyenler", d.notBack.length),
-        tabBtn("fans", "Senin takip etmediklerin", d.fans.length)),
-      h("div", { class: "tools" }, search, h("label", { class: "check", for: "hv" }, hv, "Doğrulanmış hesapları gizle")),
-      h("div", { class: "actions" }, refs.copyBtn, h("button", { class: "ghost", onclick: downloadCsv }, "CSV indir")),
+        tabBtn("notBack", "Not following you back", d.notBack.length),
+        tabBtn("fans", "You don't follow back", d.fans.length)),
+      h("div", { class: "tools" }, search, h("label", { class: "check", for: "hv" }, hv, "Hide verified accounts")),
+      h("div", { class: "actions" }, refs.copyBtn, h("button", { class: "ghost", onclick: downloadCsv }, "Download CSV")),
       refs.list,
     ]);
     renderList();
@@ -217,7 +217,7 @@
     const rows = filtered();
     const frag = [];
     if (!rows.length) {
-      frag.push(h("div", { class: "empty" }, S.q || S.hideVerified ? "Bu filtreyle eşleşen hesap yok." : "Bu listede hesap yok."));
+      frag.push(h("div", { class: "empty" }, S.q || S.hideVerified ? "No accounts match this filter." : "This list is empty."));
     }
     for (const u of rows.slice(0, S.shown)) {
       const img = h("img", { class: "av", alt: "", loading: "lazy", referrerpolicy: "no-referrer" });
@@ -225,30 +225,35 @@
       frag.push(h("a", { class: "row", href: `https://www.instagram.com/${u.username}/`, target: "_blank", rel: "noopener noreferrer" },
         img,
         h("div", { style: "min-width:0" }, h("div", { class: "nm" }, u.username), u.name ? h("div", { class: "fn" }, u.name) : null),
-        u.verified ? h("span", { class: "tag" }, "Doğrulanmış") : null));
+        u.verified ? h("span", { class: "tag" }, "Verified") : null));
     }
     if (rows.length > S.shown) {
       frag.push(h("button", { class: "ghost more", onclick: () => { S.shown += PAGE_SIZE; renderList(); } },
-        `${nf.format(rows.length - S.shown)} hesap daha göster`));
+        `Show ${nf.format(rows.length - S.shown)} more`));
     }
     refs.list.replaceChildren(...frag);
   }
 
   function animateBig(target) {
     if (reduceMotion || target < 2) { refs.big.textContent = nf.format(target); return; }
-    const t0 = performance.now(), dur = 800;
+    const dur = 800;
+    const el = refs.big;
+    let t0;
     const tick = (t) => {
-      const p = Math.min(1, (t - t0) / dur);
-      refs.big.textContent = nf.format(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (t0 === undefined) t0 = t;
+      const p = Math.max(0, Math.min(1, (t - t0) / dur));
+      el.textContent = nf.format(Math.round(target * (1 - Math.pow(1 - p, 3))));
       if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+    // rAF doesn't run in background tabs, so always land on the real number.
+    setTimeout(() => { el.textContent = nf.format(target); }, dur + 150);
   }
 
-  // ---------- Dışa aktarma ----------
+  // ---------- Export ----------
   function copyList() {
     const text = filtered().map((u) => u.username).join("\n");
-    const done = () => { refs.copyBtn.textContent = "Kopyalandı"; setTimeout(() => (refs.copyBtn.textContent = "Listeyi kopyala"), 1500); };
+    const done = () => { refs.copyBtn.textContent = "Copied"; setTimeout(() => (refs.copyBtn.textContent = "Copy list"), 1500); };
     (navigator.clipboard?.writeText(text) || Promise.reject()).then(done, () => {
       const ta = h("textarea", { style: "position:fixed;opacity:0" }); ta.value = text;
       root.append(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (_) {} ta.remove();
@@ -257,14 +262,14 @@
 
   function downloadCsv() {
     const esc = (s) => `"${String(s ?? "").replace(/"/g, '""')}"`;
-    const lines = ["kullanici_adi,ad,dogrulanmis,profil", ...filtered().map((u) =>
-      [esc(u.username), esc(u.name), u.verified ? "evet" : "hayir", esc(`https://www.instagram.com/${u.username}/`)].join(","))];
+    const lines = ["username,name,verified,profile", ...filtered().map((u) =>
+      [esc(u.username), esc(u.name), u.verified ? "yes" : "no", esc(`https://www.instagram.com/${u.username}/`)].join(","))];
     const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
-    const a = h("a", { href: URL.createObjectURL(blob), download: S.tab === "notBack" ? "geri-takip-etmeyenler.csv" : "takip-etmediklerin.csv" });
+    const a = h("a", { href: URL.createObjectURL(blob), download: S.tab === "notBack" ? "not-following-back.csv" : "you-dont-follow-back.csv" });
     root.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
-  // ---------- Veri çekme ----------
+  // ---------- Fetching ----------
   const API = { credentials: "include", headers: { "x-ig-app-id": "936619743392459" } };
 
   async function fetchTotals() {
@@ -287,8 +292,8 @@
       const res = await fetch(url, API);
       if (!res.ok) {
         throw new Error(res.status === 429
-          ? "Instagram istekleri sınırladı (HTTP 429). Birkaç saat bekleyip tekrar dene."
-          : `${kind === "following" ? "Takip edilenler" : "Takipçiler"} okunamadı (HTTP ${res.status}). Oturumun açık olduğundan emin ol.`);
+          ? "Instagram rate-limited the requests (HTTP 429). Wait a few hours and try again."
+          : `Couldn't read ${kind === "following" ? "your following list" : "your followers"} (HTTP ${res.status}). Make sure you're logged in.`);
       }
       const data = await res.json();
       for (const u of data.users || []) {
