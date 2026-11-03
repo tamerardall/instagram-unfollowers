@@ -45,7 +45,7 @@ The big number is how many accounts you follow that don't follow you back. Two t
 - **Not following you back**: you follow them, they don't follow you.
 - **You don't follow back**: they follow you, you don't follow them.
 
-Click any row to open that profile in a new tab.
+Click any row to open that profile in a new tab. Accounts without a profile photo, or whose photo can't be loaded, show a default silhouette instead.
 
 <br clear="right">
 

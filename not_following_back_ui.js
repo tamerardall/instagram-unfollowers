@@ -82,7 +82,9 @@
   .list { flex:1; overflow:auto; border-top:1px solid var(--line); background:var(--surface); }
   .row { display:grid; grid-template-columns:36px 1fr auto; gap:12px; align-items:center; padding:10px 20px; color:inherit; text-decoration:none; border-bottom:1px solid var(--line); }
   .row:hover { background: var(--soft); }
-  .av { width:36px; height:36px; border-radius:50%; background:var(--line); object-fit:cover; }
+  .av { position:relative; display:block; width:36px; height:36px; border-radius:50%; overflow:hidden; background:var(--soft); }
+  .av svg { display:block; width:100%; height:100%; fill:var(--muted); opacity:.55; }
+  .av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:var(--soft); }
   .nm { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .fn { color:var(--muted); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tag { font-size:12px; color:var(--accent); }
@@ -213,6 +215,27 @@
     animateBig(d.notBack.length);
   }
 
+  // Default silhouette sits underneath; the real photo covers it once it loads
+  // and is removed again if it fails (blocked by CSP, expired URL, no photo).
+  function avatar(src) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 36 36");
+    svg.setAttribute("aria-hidden", "true");
+    const head = document.createElementNS(ns, "circle");
+    head.setAttribute("cx", "18"); head.setAttribute("cy", "14"); head.setAttribute("r", "6");
+    const body = document.createElementNS(ns, "path");
+    body.setAttribute("d", "M5 36c0-8 6-12.5 13-12.5S31 28 31 36z");
+    svg.append(head, body);
+    const wrap = h("span", { class: "av" }, svg);
+    if (src) {
+      const img = h("img", { alt: "", loading: "lazy", referrerpolicy: "no-referrer", onerror: () => img.remove() });
+      img.src = src;
+      wrap.append(img);
+    }
+    return wrap;
+  }
+
   function renderList() {
     const rows = filtered();
     const frag = [];
@@ -220,10 +243,8 @@
       frag.push(h("div", { class: "empty" }, S.q || S.hideVerified ? "No accounts match this filter." : "This list is empty."));
     }
     for (const u of rows.slice(0, S.shown)) {
-      const img = h("img", { class: "av", alt: "", loading: "lazy", referrerpolicy: "no-referrer" });
-      if (u.pic) img.src = u.pic;
       frag.push(h("a", { class: "row", href: `https://www.instagram.com/${u.username}/`, target: "_blank", rel: "noopener noreferrer" },
-        img,
+        avatar(u.pic),
         h("div", { style: "min-width:0" }, h("div", { class: "nm" }, u.username), u.name ? h("div", { class: "fn" }, u.name) : null),
         u.verified ? h("span", { class: "tag" }, "Verified") : null));
     }
