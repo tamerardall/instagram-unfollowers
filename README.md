@@ -1,42 +1,42 @@
 # instagram-unfollowers
 
-Instagram'da takip ettiğin ama seni geri takip etmeyen hesapları gösteren, tarayıcı konsoluna yapıştırılan tek dosyalık bir araç. Kurulum, şifre veya üçüncü parti uygulama gerektirmez.
+A single-file tool you paste into your browser console to see which Instagram accounts you follow that don't follow you back. No install, no password, no third-party app.
 
-![Sonuç paneli, sahte verilerle](docs/ekran.png)
+![Results panel, shown with fake data](docs/ekran.png)
 
-*Ekran görüntüsü sahte verilerle alındı.*
+*Screenshot taken with fake data. The panel's interface text is in Turkish.*
 
-## Kullanım
+## Usage
 
-1. instagram.com'a bilgisayardan giriş yap.
-2. `F12` ile geliştirici araçlarını aç ve **Console** sekmesine geç.
-3. [`not_following_back_ui.js`](not_following_back_ui.js) dosyasının tamamını kopyalayıp konsola yapıştır ve `Enter`'a bas. Tarayıcı yapıştırmayı engellerse önce `allow pasting` yazıp `Enter`'a bas.
-4. Açılan panelde **Karşılaştırmayı başlat** düğmesine tıkla. Bin kişilik hesaplarda birkaç dakika sürer, bu sırada sekmeyi açık tut.
+1. Log in to instagram.com on a computer.
+2. Press `F12` to open developer tools and switch to the **Console** tab.
+3. Copy the whole of [`not_following_back_ui.js`](not_following_back_ui.js), paste it into the console and press `Enter`. If the browser blocks pasting, type `allow pasting` and press `Enter` first.
+4. Click the start button in the panel that opens. Large accounts can take a few minutes, so keep the tab open while it runs.
 
-## Panelde neler var
+## What the panel offers
 
-- Canlı sayaç ve ilerleme çubuğu, istersen **Vazgeç** düğmesi.
-- İki sekme: **Seni takip etmeyenler** ve **Senin takip etmediklerin**.
-- Kullanıcı arama ve doğrulanmış hesapları gizleme.
-- Filtrelenmiş listeyi **kopyalama** veya **CSV olarak indirme**.
-- Bir satıra tıklayınca profil yeni sekmede açılır.
-- `Esc` veya × paneli kapatır. Sonuç ayrıca `window.__notFollowingBack` içinde durur.
+- Live counters and a progress bar, with a button to cancel.
+- Two tabs: accounts that don't follow you back, and accounts that follow you but you don't follow.
+- Search and a filter to hide verified accounts.
+- Copy the filtered list, or download it as CSV.
+- Click a row to open that profile in a new tab.
+- `Esc` or the × button closes the panel. The result is also kept in `window.__notFollowingBack`.
 
-## Nasıl çalışır
+## How it works
 
-Araç, oturumun açık olduğu sekmede Instagram'ın web arayüzünün kullandığı `friendships/{id}/following` ve `followers` uç noktalarını sayfa sayfa okur. Sayfalar arasında 1,5–3,5 saniye rastgele bekler. İki listeyi karşılaştırıp farkı gösterir.
+The script runs inside your logged-in instagram.com tab and reads the `friendships/{id}/following` and `followers` endpoints that Instagram's own web app uses, one page at a time, waiting 1.5–3.5 seconds at random between pages. It then compares the two lists and shows the difference.
 
-- **Salt okunur:** hiçbir hesabı takipten çıkarmaz, beğenmez, mesaj atmaz.
-- **Veri dışarı gitmez:** istekler yalnızca instagram.com'a yapılır. Başka hiçbir yere bir şey gönderilmez.
-- Hata (örneğin HTTP 429) olursa durur ve eksik veriyle sonuç göstermez.
+- **Read-only:** it never unfollows, likes or messages anyone.
+- **Nothing leaves your browser:** requests go only to instagram.com.
+- On an error (for example HTTP 429) it stops and shows no result, rather than reporting from incomplete data.
 
-## Riskler
+## Risks
 
-- Bu, Instagram'ın **resmi olmayan** iç API'sini kullanır. Instagram yanıt biçimini değiştirirse araç bozulabilir.
-- Otomatik istekler Instagram'ın kullanım şartlarının gri alanında kalır. Sık çalıştırırsan hesabın geçici olarak kısıtlanabilir. Tek seferlik ve seyrek kullan.
-- Kodu çalıştırmadan önce oku. Konsola yapıştırdığın her kod oturumunla çalışır, bu yüzden tanımadığın kaynaklardan gelen script'leri yapıştırma.
-- Resmi alternatif: Instagram'ın *Hesap Merkezi → Bilgilerini indir* özelliğiyle JSON formatında takipçi ve takip edilen listelerini indirip kendin karşılaştırabilirsin.
+- This uses Instagram's **unofficial** internal API. If Instagram changes its response format, the tool can break.
+- Automated requests sit in a gray area of Instagram's terms of use. Running it often may get your account temporarily restricted, so use it rarely and once at a time.
+- Read any code before you run it. Whatever you paste into the console runs with your session, so never paste scripts from sources you don't trust.
+- Official alternative: use *Accounts Center → Download your information* to export your followers and following lists as JSON and compare them yourself.
 
-## Not
+## Disclaimer
 
-Instagram ile bağlantılı değildir. Kendi hesabın için kişisel kullanım amacıyla yazılmıştır.
+Not affiliated with Instagram or Meta. Written for personal use on your own account.
